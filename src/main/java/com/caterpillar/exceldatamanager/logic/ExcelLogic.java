@@ -92,7 +92,7 @@ public class ExcelLogic {
                 params.setTitleRows(titleRows);
                 params.setHeadRows(headerRows);
                 params.setStartSheetIndex(numSheet);
-                List<Subledger> importExcel = ExcelImportUtil.importExcel(file, pojoClass, params);
+                List<Object> importExcel = ExcelImportUtil.importExcel(file, pojoClass, params);
                 Map sheetMap = new HashMap();
                 ExportParams exportParams = new ExportParams();
                 exportParams.setSheetName(hssfWorkbook.getSheetName(numSheet));
