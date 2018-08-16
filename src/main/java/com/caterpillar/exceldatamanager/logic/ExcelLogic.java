@@ -5,18 +5,21 @@ import cn.afterturn.easypoi.excel.ExcelImportUtil;
 import cn.afterturn.easypoi.excel.entity.ExportParams;
 import cn.afterturn.easypoi.excel.entity.ImportParams;
 import cn.afterturn.easypoi.excel.entity.enmus.ExcelType;
+import com.caterpillar.exceldatamanager.entity.Subledger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLEncoder;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 @Slf4j
 public class ExcelLogic {
@@ -74,6 +77,55 @@ public class ExcelLogic {
             log.error(e.getMessage(), e);
         }
         return list;
+    }
+
+    public static List<Map<String, Object>> importExcelMoreSheet(String filePath, Integer titleRows, Integer headerRows, Class<?> pojoClass) {
+        if (StringUtils.isBlank(filePath)) {
+            return null;
+        }
+        List<Map<String, Object>> mapList = new ArrayList<>();
+        try {
+            ImportParams params = new ImportParams();
+            File file = new File(filePath);
+            Workbook hssfWorkbook = getWorkBook(file);
+            for (int numSheet = 0; numSheet < hssfWorkbook.getNumberOfSheets(); numSheet++) {
+                params.setTitleRows(titleRows);
+                params.setHeadRows(headerRows);
+                params.setStartSheetIndex(numSheet);
+                List<Subledger> importExcel = ExcelImportUtil.importExcel(file, pojoClass, params);
+                Map sheetMap = new HashMap();
+                ExportParams exportParams = new ExportParams();
+                exportParams.setSheetName(hssfWorkbook.getSheetName(numSheet));
+                sheetMap.put("title", exportParams);
+                sheetMap.put("entity", pojoClass);
+                sheetMap.put("data", importExcel);
+                mapList.add(sheetMap);
+            }
+        } catch (NoSuchElementException e) {
+            log.error("模板不能为空", e);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+        return mapList;
+    }
+
+    /**
+     * 得到Workbook对象
+     *
+     * @param file
+     * @return
+     * @throws IOException
+     */
+    public static Workbook getWorkBook(File file) throws IOException {
+        InputStream is = new FileInputStream(file);
+        Workbook hssfWorkbook = null;
+        try {
+            hssfWorkbook = new HSSFWorkbook(is);
+        } catch (Exception ex) {
+            is = new FileInputStream(file);
+            hssfWorkbook = new XSSFWorkbook(is);
+        }
+        return hssfWorkbook;
     }
 
     public static <T> List<T> importExcel(MultipartFile file, Integer titleRows, Integer headerRows, Class<T> pojoClass) {
