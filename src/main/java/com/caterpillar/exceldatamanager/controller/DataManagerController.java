@@ -4,7 +4,9 @@ import com.caterpillar.exceldatamanager.entity.Subledger;
 import com.caterpillar.exceldatamanager.logic.ExcelLogic;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
@@ -29,10 +31,9 @@ public class DataManagerController {
     }
 
     @RequestMapping("importExcel")
-    public void importExcel(HttpServletResponse response) {
-        String filePath = "D:\\DataFile\\项目相关\\Caterpillar\\subledger_L_for_excel_cat NQ_201707.xls";
+    public void importExcel(@RequestParam(value = "importExcelFiles", required = false) MultipartFile file, HttpServletResponse response) {
         //解析excel
-        List<Map<String, Object>> subledgerList = ExcelLogic.importExcelMoreSheet(filePath, 0, 1, Subledger.class);
+        List<Map<String, Object>> subledgerList = ExcelLogic.importExcelMoreSheet(file, 0, 1, Subledger.class);
         //也可以使用MultipartFile,使用 FileUtil.importExcel(MultipartFile file, Integer titleRows, Integer headerRows, Class < T > pojoClass) 导入
         log.info("导入数据一共{}个sheet", subledgerList.size());
         Date date = new Date();

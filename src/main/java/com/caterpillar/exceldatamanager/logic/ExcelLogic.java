@@ -79,20 +79,19 @@ public class ExcelLogic {
         return list;
     }
 
-    public static List<Map<String, Object>> importExcelMoreSheet(String filePath, Integer titleRows, Integer headerRows, Class<?> pojoClass) {
-        if (StringUtils.isBlank(filePath)) {
+    public static List<Map<String, Object>> importExcelMoreSheet(MultipartFile file, Integer titleRows, Integer headerRows, Class<?> pojoClass) {
+        if (file == null) {
             return null;
         }
         List<Map<String, Object>> mapList = new ArrayList<>();
         try {
             ImportParams params = new ImportParams();
-            File file = new File(filePath);
             Workbook hssfWorkbook = getWorkBook(file);
             for (int numSheet = 0; numSheet < hssfWorkbook.getNumberOfSheets(); numSheet++) {
                 params.setTitleRows(titleRows);
                 params.setHeadRows(headerRows);
                 params.setStartSheetIndex(numSheet);
-                List<Object> importExcel = ExcelImportUtil.importExcel(file, pojoClass, params);
+                List<Object> importExcel = ExcelImportUtil.importExcel(file.getInputStream(), pojoClass, params);
                 Map sheetMap = new HashMap();
                 ExportParams exportParams = new ExportParams();
                 exportParams.setSheetName(hssfWorkbook.getSheetName(numSheet));
@@ -116,13 +115,13 @@ public class ExcelLogic {
      * @return
      * @throws IOException
      */
-    public static Workbook getWorkBook(File file) throws IOException {
-        InputStream is = new FileInputStream(file);
+    public static Workbook getWorkBook(MultipartFile file) throws IOException {
+        InputStream is = file.getInputStream();
         Workbook hssfWorkbook = null;
         try {
             hssfWorkbook = new HSSFWorkbook(is);
         } catch (Exception ex) {
-            is = new FileInputStream(file);
+            is = file.getInputStream();
             hssfWorkbook = new XSSFWorkbook(is);
         }
         return hssfWorkbook;

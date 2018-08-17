@@ -1,0 +1,11 @@
+spring:
+  thymeleaf:
+    prefix: classpath:/templates/
+    cache: false
+  devtools:
+    restart:
+      enabled: true
+  servlet:
+    multipart:
+      max-file-size: -1
+      max-request-size: -1
