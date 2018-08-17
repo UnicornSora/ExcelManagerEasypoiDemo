@@ -5,7 +5,6 @@ import cn.afterturn.easypoi.excel.ExcelImportUtil;
 import cn.afterturn.easypoi.excel.entity.ExportParams;
 import cn.afterturn.easypoi.excel.entity.ImportParams;
 import cn.afterturn.easypoi.excel.entity.enmus.ExcelType;
-import com.caterpillar.exceldatamanager.entity.Subledger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -15,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
@@ -34,8 +32,11 @@ public class ExcelLogic {
         defaultExport(list, pojoClass, fileName, response, new ExportParams(title, sheetName));
     }
 
-    public static void exportExcel(List<Map<String, Object>> list, String fileName, HttpServletResponse response) {
-        defaultExport(list, fileName, response);
+    public static void exportExcel(List<Map<String, Object>> list, String fileName, HttpServletResponse response, ExcelType excelType) {
+        if (excelType == null) {
+            excelType = ExcelType.HSSF;
+        }
+        defaultExport(list, fileName, response, excelType);
     }
 
     private static void defaultExport(List<?> list, Class<?> pojoClass, String fileName, HttpServletResponse response, ExportParams exportParams) {
@@ -55,8 +56,8 @@ public class ExcelLogic {
         }
     }
 
-    private static void defaultExport(List<Map<String, Object>> list, String fileName, HttpServletResponse response) {
-        Workbook workbook = ExcelExportUtil.exportExcel(list, ExcelType.HSSF);
+    private static void defaultExport(List<Map<String, Object>> list, String fileName, HttpServletResponse response, ExcelType excelType) {
+        Workbook workbook = ExcelExportUtil.exportExcel(list, excelType);
         if (workbook != null) ;
         downLoadExcel(fileName, response, workbook);
     }
@@ -86,15 +87,16 @@ public class ExcelLogic {
         List<Map<String, Object>> mapList = new ArrayList<>();
         try {
             ImportParams params = new ImportParams();
-            Workbook hssfWorkbook = getWorkBook(file);
-            for (int numSheet = 0; numSheet < hssfWorkbook.getNumberOfSheets(); numSheet++) {
+            Workbook xssfWorkbook = getWorkBook(file);
+            for (int numSheet = 0; numSheet < xssfWorkbook.getNumberOfSheets(); numSheet++) {
                 params.setTitleRows(titleRows);
                 params.setHeadRows(headerRows);
                 params.setStartSheetIndex(numSheet);
                 List<Object> importExcel = ExcelImportUtil.importExcel(file.getInputStream(), pojoClass, params);
                 Map sheetMap = new HashMap();
                 ExportParams exportParams = new ExportParams();
-                exportParams.setSheetName(hssfWorkbook.getSheetName(numSheet));
+                exportParams.setSheetName(xssfWorkbook.getSheetName(numSheet));
+                exportParams.setType(ExcelType.XSSF);
                 sheetMap.put("title", exportParams);
                 sheetMap.put("entity", pojoClass);
                 sheetMap.put("data", importExcel);
@@ -117,14 +119,14 @@ public class ExcelLogic {
      */
     public static Workbook getWorkBook(MultipartFile file) throws IOException {
         InputStream is = file.getInputStream();
-        Workbook hssfWorkbook = null;
+        Workbook xssfWorkbook = null;
         try {
-            hssfWorkbook = new HSSFWorkbook(is);
+            xssfWorkbook = new XSSFWorkbook(is);
         } catch (Exception ex) {
             is = file.getInputStream();
-            hssfWorkbook = new XSSFWorkbook(is);
+            xssfWorkbook = new HSSFWorkbook(is);
         }
-        return hssfWorkbook;
+        return xssfWorkbook;
     }
 
     public static <T> List<T> importExcel(MultipartFile file, Integer titleRows, Integer headerRows, Class<T> pojoClass) {

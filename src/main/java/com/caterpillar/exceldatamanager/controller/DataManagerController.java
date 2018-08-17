@@ -1,5 +1,6 @@
 package com.caterpillar.exceldatamanager.controller;
 
+import cn.afterturn.easypoi.excel.entity.enmus.ExcelType;
 import com.caterpillar.exceldatamanager.entity.Subledger;
 import com.caterpillar.exceldatamanager.logic.ExcelLogic;
 import lombok.extern.slf4j.Slf4j;
@@ -38,8 +39,8 @@ public class DataManagerController {
         log.info("导入数据一共{}个sheet", subledgerList.size());
         Date date = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssss");
-        String excelExportName = "subledger_L_for_excel_cat_" + dateFormat.format(date) + ".xls";
-        ExcelLogic.exportExcel(subledgerList, excelExportName, response);
+        String excelExportName = "subledger_L_for_excel_cat_" + dateFormat.format(date) + ".xlsx";
+        ExcelLogic.exportExcel(subledgerList, excelExportName, response, ExcelType.XSSF);
         //TODO 保存数据库
     }
 }
