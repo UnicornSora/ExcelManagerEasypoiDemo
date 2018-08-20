@@ -5,6 +5,7 @@ import cn.afterturn.easypoi.excel.ExcelImportUtil;
 import cn.afterturn.easypoi.excel.entity.ExportParams;
 import cn.afterturn.easypoi.excel.entity.ImportParams;
 import cn.afterturn.easypoi.excel.entity.enmus.ExcelType;
+import cn.afterturn.easypoi.excel.export.ExcelBatchExportService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -62,6 +63,7 @@ public class ExcelLogic {
         downLoadExcel(fileName, response, workbook);
     }
 
+
     public static <T> List<T> importExcel(String filePath, Integer titleRows, Integer headerRows, Class<T> pojoClass) {
         if (StringUtils.isBlank(filePath)) {
             return null;
@@ -87,12 +89,14 @@ public class ExcelLogic {
         List<Map<String, Object>> mapList = new ArrayList<>();
         try {
             ImportParams params = new ImportParams();
+            log.info("getWorkBook {}", file.toString());
             Workbook xssfWorkbook = getWorkBook(file);
             for (int numSheet = 0; numSheet < xssfWorkbook.getNumberOfSheets(); numSheet++) {
+                log.info("import xssfWorkbook {} {}", numSheet, xssfWorkbook.toString());
                 params.setTitleRows(titleRows);
                 params.setHeadRows(headerRows);
                 params.setStartSheetIndex(numSheet);
-                List<Object> importExcel = ExcelImportUtil.importExcel(file.getInputStream(), pojoClass, params);
+                List<Object> importExcel = ExcelImportUtil.importExcelBySax(file.getInputStream(), pojoClass, params);
                 Map sheetMap = new HashMap();
                 ExportParams exportParams = new ExportParams();
                 exportParams.setSheetName(xssfWorkbook.getSheetName(numSheet));

@@ -34,6 +34,7 @@ public class DataManagerController {
     @RequestMapping("importExcel")
     public void importExcel(@RequestParam(value = "importExcelFiles", required = false) MultipartFile file, HttpServletResponse response) {
         //解析excel
+        log.info("start import {}", file.toString());
         List<Map<String, Object>> subledgerList = ExcelLogic.importExcelMoreSheet(file, 0, 1, Subledger.class);
         //也可以使用MultipartFile,使用 FileUtil.importExcel(MultipartFile file, Integer titleRows, Integer headerRows, Class < T > pojoClass) 导入
         log.info("导入数据一共{}个sheet", subledgerList.size());
