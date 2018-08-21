@@ -5,7 +5,6 @@ import cn.afterturn.easypoi.excel.ExcelImportUtil;
 import cn.afterturn.easypoi.excel.entity.ExportParams;
 import cn.afterturn.easypoi.excel.entity.ImportParams;
 import cn.afterturn.easypoi.excel.entity.enmus.ExcelType;
-import cn.afterturn.easypoi.excel.export.ExcelBatchExportService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -88,6 +87,8 @@ public class ExcelLogic {
         }
         List<Map<String, Object>> mapList = new ArrayList<>();
         try {
+            Date importTime = new Date();
+            log.info("importTime {}", importTime.getTime());
             ImportParams params = new ImportParams();
             log.info("getWorkBook {}", file.toString());
             Workbook xssfWorkbook = getWorkBook(file);
@@ -105,6 +106,8 @@ public class ExcelLogic {
                 sheetMap.put("entity", pojoClass);
                 sheetMap.put("data", importExcel);
                 mapList.add(sheetMap);
+                Date importOneTime = new Date();
+                log.info("import One time {}", importOneTime.getTime());
             }
         } catch (NoSuchElementException e) {
             log.error("模板不能为空", e);
@@ -127,7 +130,6 @@ public class ExcelLogic {
         try {
             xssfWorkbook = new XSSFWorkbook(is);
         } catch (Exception ex) {
-            is = file.getInputStream();
             xssfWorkbook = new HSSFWorkbook(is);
         }
         return xssfWorkbook;

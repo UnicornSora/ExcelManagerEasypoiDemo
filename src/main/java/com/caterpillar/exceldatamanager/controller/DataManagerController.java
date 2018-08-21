@@ -1,8 +1,8 @@
 package com.caterpillar.exceldatamanager.controller;
 
-import cn.afterturn.easypoi.excel.entity.enmus.ExcelType;
 import com.caterpillar.exceldatamanager.entity.Subledger;
 import com.caterpillar.exceldatamanager.logic.ExcelLogic;
+import com.caterpillar.exceldatamanager.logic.ExcelReaderUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,7 +14,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -33,15 +32,26 @@ public class DataManagerController {
 
     @RequestMapping("importExcel")
     public void importExcel(@RequestParam(value = "importExcelFiles", required = false) MultipartFile file, HttpServletResponse response) {
-        //解析excel
-        log.info("start import {}", file.toString());
-        List<Map<String, Object>> subledgerList = ExcelLogic.importExcelMoreSheet(file, 0, 1, Subledger.class);
-        //也可以使用MultipartFile,使用 FileUtil.importExcel(MultipartFile file, Integer titleRows, Integer headerRows, Class < T > pojoClass) 导入
-        log.info("导入数据一共{}个sheet", subledgerList.size());
-        Date date = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssss");
-        String excelExportName = "subledger_L_for_excel_cat_" + dateFormat.format(date) + ".xlsx";
-        ExcelLogic.exportExcel(subledgerList, excelExportName, response, ExcelType.XSSF);
-        //TODO 保存数据库
+        try {
+            Date startDate = new Date();
+            log.info("start time {}", startDate.getTime());
+            ExcelReaderUtil.mapList = new ArrayList<>();
+            Date impotStartDate = new Date();
+            log.info("impotStartDate {}", (impotStartDate.getTime() - startDate.getTime()) / 1000);
+            ExcelReaderUtil.readExcel(file);
+            Date impotEndDate = new Date();
+            log.info("impotEndDate {}", (impotEndDate.getTime() - startDate.getTime()) / 1000);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssss");
+            String excelExportName = "subledger_L_for_excel_cat_" + dateFormat.format(new Date()) + ".xlsx";
+            Date exportStartDate = new Date();
+            log.info("exportStartDate {}", (exportStartDate.getTime() - startDate.getTime()) / 1000);
+            Date exportEndDate = new Date();
+            log.info("exportEndDate {}", (exportEndDate.getTime() - startDate.getTime()) / 1000);
+            Date endDate = new Date();
+            log.info("end import {}", endDate.getTime());
+            log.info("时间相差 {}", (endDate.getTime() - startDate.getTime()) / 1000);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
     }
 }
