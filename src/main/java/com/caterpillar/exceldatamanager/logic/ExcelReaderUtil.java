@@ -4,10 +4,11 @@ import cn.afterturn.easypoi.excel.entity.ExportParams;
 import cn.afterturn.easypoi.excel.entity.enmus.ExcelType;
 import com.caterpillar.exceldatamanager.entity.Subledger;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +20,12 @@ import java.util.*;
  * @desc
  **/
 @Slf4j
+@Component
 public class ExcelReaderUtil {
+
+    @Value("${excel.export.sxssfworkbook.size}")
+    private Integer excelExportSxssfworkbookSize;
+
     //excel2003扩展名
     public static final String EXCEL03_EXTENSION = ".xls";
     //excel2007扩展名
@@ -82,7 +88,7 @@ public class ExcelReaderUtil {
         }
     }
 
-    public static void readExcel(MultipartFile file) throws Exception {
+    public void readExcel(MultipartFile file) throws Exception {
         int totalRows = 0;
         String fileName = file.getOriginalFilename();
         if (fileName.endsWith(EXCEL03_EXTENSION)) { //处理excel2003文件
@@ -97,35 +103,45 @@ public class ExcelReaderUtil {
         log.info("发送的总行数：" + totalRows);
     }
 
-    public static void exportExcel(HttpServletResponse response, String filename) throws Exception {
+    public void exportExcel(HttpServletResponse response, String filename) {
         OutputStream os = null;
         try {
             response.setContentType("application/force-download"); // 设置下载类型
             response.setHeader("Content-Disposition", "attachment;filename=" + filename); // 设置文件的名称
             os = response.getOutputStream(); // 输出流
-            SXSSFWorkbook wb = new SXSSFWorkbook(1000);//内存中保留 1000 条数据，以免内存溢出，其余写入 硬盘
-            // 获得该工作区的第一个sheet
-            Sheet sheet1 = wb.createSheet("sheet1");
-            int excelRow = 0; //标题行
-            Row titleRow = (Row) sheet1.createRow(excelRow++);
-            // TODO
-//            for (int i = 0; i < columnList.size(); i++) {
-//                Cell cell = titleRow.createCell(i);
-//                cell.setCellValue(columnList.get(i));
-//            }
-//            for (int m = 0; m < cycleCount; m++) {
-//                List<List<String>> eventStrList = this.convertPageModelStrList();
-//                if (eventStrList != null && eventStrList.size() > 0) {
-//                    for (int i = 0; i < eventStrList.size(); i++) { //明细行
-//                        Row contentRow = (Row) sheet1.createRow(excelRow++);
-//                        List<String> reParam = (List<String>) eventStrList.get(i);
-//                        for (int j = 0; j < reParam.size(); j++) {
-//                            Cell cell = contentRow.createCell(j);
-//                            cell.setCellValue(reParam.get(j));
-//                        }
-//                    }
-//                }
-//            }
+            SXSSFWorkbook wb = new SXSSFWorkbook(excelExportSxssfworkbookSize);//内存中保留 1000 条数据，以免内存溢出，其余写入 硬盘
+            for (Map<String, Object> map : mapList) {
+                ExportParams exportParams = (ExportParams) map.get("title");
+                Sheet sheet = wb.createSheet(exportParams.getSheetName());
+                Row titleRow = (Row) sheet.createRow(0);
+                titleRow.createCell(0).setCellValue("中方科目代码");
+                titleRow.createCell(1).setCellValue("中方科目描述");
+                titleRow.createCell(2).setCellValue("年");
+                titleRow.createCell(3).setCellValue("月");
+                titleRow.createCell(4).setCellValue("日");
+                titleRow.createCell(5).setCellValue("ERP 凭证号");
+                titleRow.createCell(6).setCellValue("摘             要");
+                titleRow.createCell(7).setCellValue("借方");
+                titleRow.createCell(8).setCellValue("贷方");
+                titleRow.createCell(9).setCellValue("方向");
+                titleRow.createCell(10).setCellValue("余额");
+
+                List<Subledger> subledgerList = (List<Subledger>) map.get("data");
+                for (int i = 0; i < subledgerList.size(); i++) {
+                    Row row = (Row) sheet.createRow(i + 1);
+                    row.createCell(0).setCellValue(subledgerList.get(i).getChineseSubjectCode());
+                    row.createCell(1).setCellValue(subledgerList.get(i).getChineseSubjectDescription());
+                    row.createCell(2).setCellValue(subledgerList.get(i).getYear());
+                    row.createCell(3).setCellValue(subledgerList.get(i).getMonth());
+                    row.createCell(4).setCellValue(subledgerList.get(i).getDay());
+                    row.createCell(5).setCellValue(subledgerList.get(i).getErpCertificateNumber());
+                    row.createCell(6).setCellValue(subledgerList.get(i).getAbstractMsg());
+                    row.createCell(7).setCellValue(subledgerList.get(i).getDebit());
+                    row.createCell(8).setCellValue(subledgerList.get(i).getLender());
+                    row.createCell(9).setCellValue(subledgerList.get(i).getDirection());
+                    row.createCell(10).setCellValue(subledgerList.get(i).getBalance());
+                }
+            }
             wb.write(os);
         } catch (Exception e) {
             log.error(e.getMessage(), e);

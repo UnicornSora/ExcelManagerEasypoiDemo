@@ -9,3 +9,7 @@ spring:
     multipart:
       max-file-size: -1
       max-request-size: -1
+excel:
+  export:
+    sxssfworkbook:
+      size: 10000
